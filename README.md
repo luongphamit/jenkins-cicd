@@ -2,7 +2,7 @@
 # Installation
 ## Build the Jenkins BlueOcean Docker Image
 ```
-docker build -t myjenkins-blueocean:lts-jdk11 .
+docker build -t myjenkins-blueocean:lts-jdk17 .
 ```
 
 ## Create the network 'jenkins'
@@ -19,7 +19,7 @@ docker run --name jenkins-blueocean --restart=on-failure --detach \
   --publish 8080:8080 --publish 50000:50000 \
   --volume jenkins-data:/var/jenkins_home \
   --volume jenkins-docker-certs:/certs/client:ro \
-  myjenkins-blueocean:lts-jdk11
+  myjenkins-blueocean:lts-jdk17
 ```
 
 ### Windows
@@ -29,7 +29,7 @@ docker run --name jenkins-blueocean --restart=on-failure --detach `
   --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 `
   --volume jenkins-data:/var/jenkins_home `
   --volume jenkins-docker-certs:/certs/client:ro `
-  --publish 8080:8080 --publish 50000:50000 myjenkins-blueocean:lts-jdk11
+  --publish 8080:8080 --publish 50000:50000 myjenkins-blueocean:lts-jdk17
 ```
 
 
