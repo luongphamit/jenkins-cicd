@@ -1,3 +1,5 @@
+env.GIT_CREDENTIALS_ID="4113d2cf-0e7f-458f-b8f9-687ec233c2f4"
+
 pipeline {
     agent any
     environment {
@@ -24,24 +26,30 @@ pipeline {
         }    
     }
     stages {
+        stage('Noti') {
+            steps {
+                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n=====\n🎉Started!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+            }
+        }
         stage('Checkout Code') {
             steps {
-                git branch: 'main', credentialsId: '4113d2cf-0e7f-458f-b8f9-687ec233c2f4', url: 'https://github.com/playgroundvina/pools-swap-stake'
+                gitCheckoutBranch()
             }
         }
         
         stage('Build and Push image') {
             steps {
-                withCredentials([file(credentialsId: '966848c2-cfcf-48d4-af6e-d85534886b4b', variable: 'CommonENV'), file(credentialsId: 'b96bcde3-71c2-483a-87fe-bd4c44614d31', variable: 'BridgeENV'), file(credentialsId: '1582f7ec-e981-47c9-92c7-a64a9d345324', variable: 'SwapENV')]) {
+                withCredentials([file(credentialsId: 'e4d281ee-df99-4332-af67-9e71976e3f66', variable: 'CommonENV'), file(credentialsId: 'f432f859-ee87-4839-9c10-a417795b2e55', variable: 'BridgeENV'), file(credentialsId: 'bf118c81-dd8b-4293-8744-13029caa1ea7', variable: 'SwapENV')]) {
                     withDockerRegistry(credentialsId: 'eeaa327e-4f33-4f7d-bfda-016f138a659d', url: 'https://hub.playgroundvina.com/') {
                         sh '''
+                            echo "$CommonENV"
                             cat "$CommonENV" "$BridgeENV" > client-v2/.env
-                            docker build -t hub.playgroundvina.com/pg/poolsbridge:pro -f docker/Dockerfile .
-                            docker push hub.playgroundvina.com/pg/poolsbridge:pro
+                            docker build -t hub.playgroundvina.com/pg/poolsbridge:dev -f docker/Dockerfile .
+                            docker push hub.playgroundvina.com/pg/poolsbridge:dev
                             
                             cat "$CommonENV" "$SwapENV" > client-v2/.env
-                            docker build -t hub.playgroundvina.com/pg/poolsswap:pro -f docker/Dockerfile .
-                            docker push hub.playgroundvina.com/pg/poolsswap:pro
+                            docker build -t hub.playgroundvina.com/pg/poolsswap:dev -f docker/Dockerfile .
+                            docker push hub.playgroundvina.com/pg/poolsswap:dev
                         '''
                     }
                 }
@@ -51,12 +59,23 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                sshagent(['3d24d712-2b75-42a1-b813-b35ee0348847']) {
+                sshagent(['5e7982bd-6f22-4cb5-961d-3c18032ed467']) {
                     sh '''
-                        ssh -o StrictHostKeyChecking=no -l ubuntu 13.251.215.146 "cd /home/ubuntu/pools-swap-stake && bash deploy.pro.sh"
+                        ssh -o StrictHostKeyChecking=no -l ubuntu 42.112.59.88 "cd /home/ubuntu/pools-swap-stake && bash deploy.dev.sh"
                     '''
                 }
             }
         }
     }
+}
+
+def gitCheckoutBranch(){
+  checkout([
+    $class: 'GitSCM', 
+    branches: [[name: "*/${GIT_BRANCH}"]],
+    doGenerateSubmoduleConfigurations: false,
+    extensions: [],
+    submoduleCfg: [],
+    userRemoteConfigs: [[ credentialsId: "${GIT_CREDENTIALS_ID}", url: "${GIT_URL}" ]]
+  ])
 }
