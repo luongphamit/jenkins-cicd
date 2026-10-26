@@ -1,9 +1,11 @@
+// Prefer the local machine agent; fall back to the dev server when it is offline.
+env.PRIMARY_BUILD_LABEL = 'local-builder'
+env.FALLBACK_BUILD_LABEL = 'built-in'
+env.BUILD_LABEL = nodesByLabel(label: env.PRIMARY_BUILD_LABEL, offline: false) ? env.PRIMARY_BUILD_LABEL : env.FALLBACK_BUILD_LABEL
+echo "Build will run on: ${env.BUILD_LABEL}"
+
 pipeline {
-    agent { 
-        node {
-            label 'docker-agent-python'
-            }
-      }
+    agent { label "${env.BUILD_LABEL}" }
     stages {
         stage('Build') {
             steps {

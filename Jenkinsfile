@@ -1,7 +1,13 @@
 env.GIT_CREDENTIALS_ID="4113d2cf-0e7f-458f-b8f9-687ec233c2f4"
 
+// Prefer the local machine agent; fall back to the dev server when it is offline.
+env.PRIMARY_BUILD_LABEL = 'local-builder'
+env.FALLBACK_BUILD_LABEL = 'built-in'
+env.BUILD_LABEL = nodesByLabel(label: env.PRIMARY_BUILD_LABEL, offline: false) ? env.PRIMARY_BUILD_LABEL : env.FALLBACK_BUILD_LABEL
+echo "Build will run on: ${env.BUILD_LABEL}"
+
 pipeline {
-    agent any
+    agent { label "${env.BUILD_LABEL}" }
     environment {
         // Telegram configuration
         TOKEN = credentials('b4a49b21-4caa-4f7a-834b-ffa7d6b9c41e')
